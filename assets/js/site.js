@@ -1,23 +1,134 @@
-(()=>{"use strict";
-const cfg=window.SITE_CONFIG,data=window.SITE_CONTENT,root=document.documentElement;
-let lang=cfg.languages.includes(localStorage.getItem("tali-language"))?localStorage.getItem("tali-language"):cfg.defaultLanguage;
-const t=k=>data[lang][k]??data.ru[k]??k;
-const esc=v=>String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
-function render(){
- document.querySelector("[data-services]").innerHTML=t("services").map(x=>`<article class="service-card"><div class="service-icon">${esc(x[0])}</div><h3>${esc(x[1])}</h3><p>${esc(x[2])}</p></article>`).join("");
- document.querySelector("[data-steps]").innerHTML=t("steps").map(x=>`<li class="step"><div><h3>${esc(x[0])}</h3><p>${esc(x[1])}</p></div></li>`).join("");
- document.querySelector("[data-features]").innerHTML=t("features").map(x=>`<div class="feature">${esc(x)}</div>`).join("");
- document.querySelector("[data-formats]").innerHTML=t("formats").map(x=>`<article class="format-card"><b>${esc(x[0])}</b><h3>${esc(x[1])}</h3><p>${esc(x[2])}</p></article>`).join("");
- document.querySelector("[data-faq]").innerHTML=t("faqs").map((x,i)=>`<section class="faq-item"><button class="faq-question" aria-expanded="false" aria-controls="faq-${i}"><span>${esc(x[0])}</span><b>+</b></button><div class="faq-answer" id="faq-${i}" hidden>${esc(x[1])}</div></section>`).join("");
- document.querySelectorAll(".faq-question").forEach(b=>b.onclick=()=>{const open=b.getAttribute("aria-expanded")==="true";b.setAttribute("aria-expanded",String(!open));document.getElementById(b.getAttribute("aria-controls")).hidden=open});
-}
-function setLanguage(next){lang=next;localStorage.setItem("tali-language",lang);root.lang=lang;root.dir=lang==="he"?"rtl":"ltr";document.title=t("pageTitle");document.querySelectorAll("[data-i18n]").forEach(n=>n.textContent=t(n.dataset.i18n));document.querySelectorAll("[data-i18n-html]").forEach(n=>n.innerHTML=t(n.dataset.i18nHtml));document.querySelectorAll("[data-site-name]").forEach(n=>n.textContent=cfg.siteName);document.querySelectorAll("[data-language]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.language===lang)));render()}
-document.querySelectorAll("[data-language]").forEach(b=>b.onclick=()=>setLanguage(b.dataset.language));
-const menu=document.querySelector(".menu-button"),mobile=document.querySelector(".mobile-nav");menu.onclick=()=>{const open=menu.getAttribute("aria-expanded")==="true";menu.setAttribute("aria-expanded",String(!open));mobile.hidden=open;document.body.classList.toggle("menu-open",!open)};mobile.querySelectorAll("a").forEach(a=>a.onclick=()=>{menu.setAttribute("aria-expanded","false");mobile.hidden=true;document.body.classList.remove("menu-open")});
-if(cfg.profilePhoto){const p=document.querySelector("[data-photo]");p.innerHTML=`<img src="${esc(cfg.profilePhoto)}" alt="${esc(cfg.siteName)}">`;p.classList.add("has-photo")}
-document.querySelector("[data-year]").textContent=new Date().getFullYear();
-const form=document.querySelector("[data-form]"),status=document.querySelector("[data-status]");
-function valid(){let ok=true;form.querySelectorAll("[required]").forEach(f=>{const yes=f.type==="checkbox"?f.checked:Boolean(f.value.trim());f.setAttribute("aria-invalid",String(!yes));ok=ok&&yes});return ok}
-form.oninput=valid;form.onsubmit=async e=>{e.preventDefault();status.className="form-status";if(!valid()){status.classList.add("error");status.textContent=t("required");return}if(cfg.contact.mode==="preview"||!cfg.contact.endpoint){status.textContent=t("previewStatus");return}const button=form.querySelector("button");button.disabled=true;try{const response=await fetch(cfg.contact.endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(Object.fromEntries(new FormData(form)))});if(!response.ok)throw Error();form.reset();status.classList.add("success");status.textContent=t("sentStatus")}catch{status.classList.add("error");status.textContent=t("sendError")}finally{button.disabled=false}};
-setLanguage(lang);
+(() => {
+  "use strict";
+
+  const siteConfig = window.SITE_CONFIG;
+  const siteContent = window.SITE_CONTENT;
+  const rootElement = document.documentElement;
+  const storedLanguage = localStorage.getItem("tali-language");
+  let currentLanguage = siteConfig.languages.includes(storedLanguage)
+    ? storedLanguage
+    : siteConfig.defaultLanguage;
+
+  const translate = (key) => siteContent[currentLanguage][key] ?? siteContent.ru[key] ?? key;
+  const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;",
+  })[character]);
+
+  function renderList(selector, items, template) {
+    document.querySelector(selector).innerHTML = items.map(template).join("");
+  }
+
+  function renderDynamicContent() {
+    renderList("[data-services]", translate("services"), (service) => `<article class="service-card"><div class="service-icon">${escapeHtml(service[0])}</div><h3>${escapeHtml(service[1])}</h3><p>${escapeHtml(service[2])}</p></article>`);
+    renderList("[data-steps]", translate("steps"), (step) => `<li class="step"><div><h3>${escapeHtml(step[0])}</h3><p>${escapeHtml(step[1])}</p></div></li>`);
+    renderList("[data-features]", translate("features"), (feature) => `<div class="feature">${escapeHtml(feature)}</div>`);
+    renderList("[data-formats]", translate("formats"), (format) => `<article class="format-card"><b>${escapeHtml(format[0])}</b><h3>${escapeHtml(format[1])}</h3><p>${escapeHtml(format[2])}</p></article>`);
+    renderList("[data-faq]", translate("faqs"), (faq, index) => `<section class="faq-item"><button class="faq-question" aria-expanded="false" aria-controls="faq-${index}"><span>${escapeHtml(faq[0])}</span><b>+</b></button><div class="faq-answer" id="faq-${index}" hidden>${escapeHtml(faq[1])}</div></section>`);
+
+    document.querySelectorAll(".faq-question").forEach((button) => {
+      button.onclick = () => {
+        const isOpen = button.getAttribute("aria-expanded") === "true";
+        button.setAttribute("aria-expanded", String(!isOpen));
+        document.getElementById(button.getAttribute("aria-controls")).hidden = isOpen;
+      };
+    });
+  }
+
+  function setLanguage(language) {
+    currentLanguage = language;
+    localStorage.setItem("tali-language", currentLanguage);
+    rootElement.lang = currentLanguage;
+    rootElement.dir = currentLanguage === "he" ? "rtl" : "ltr";
+    document.title = translate("pageTitle");
+    document.querySelectorAll("[data-i18n]").forEach((element) => { element.textContent = translate(element.dataset.i18n); });
+    document.querySelectorAll("[data-i18n-html]").forEach((element) => { element.innerHTML = translate(element.dataset.i18nHtml); });
+    document.querySelectorAll("[data-site-name]").forEach((element) => { element.textContent = siteConfig.siteName; });
+    document.querySelectorAll("[data-language]").forEach((button) => { button.setAttribute("aria-pressed", String(button.dataset.language === currentLanguage)); });
+    renderDynamicContent();
+  }
+
+  function setupLanguageSwitcher() {
+    document.querySelectorAll("[data-language]").forEach((button) => {
+      button.onclick = () => setLanguage(button.dataset.language);
+    });
+  }
+
+  function setupMobileMenu() {
+    const menuButton = document.querySelector(".menu-button");
+    const mobileNavigation = document.querySelector(".mobile-nav");
+    menuButton.onclick = () => {
+      const isOpen = menuButton.getAttribute("aria-expanded") === "true";
+      menuButton.setAttribute("aria-expanded", String(!isOpen));
+      mobileNavigation.hidden = isOpen;
+      document.body.classList.toggle("menu-open", !isOpen);
+    };
+    mobileNavigation.querySelectorAll("a").forEach((link) => {
+      link.onclick = () => {
+        menuButton.setAttribute("aria-expanded", "false");
+        mobileNavigation.hidden = true;
+        document.body.classList.remove("menu-open");
+      };
+    });
+  }
+
+  function setupProfilePhoto() {
+    if (!siteConfig.profilePhoto) return;
+    const photoContainer = document.querySelector("[data-photo]");
+    photoContainer.innerHTML = `<img src="${escapeHtml(siteConfig.profilePhoto)}" alt="${escapeHtml(siteConfig.siteName)}">`;
+    photoContainer.classList.add("has-photo");
+  }
+
+  function setupContactForm() {
+    const contactForm = document.querySelector("[data-form]");
+    const formStatus = document.querySelector("[data-status]");
+    const validateForm = () => {
+      let isValid = true;
+      contactForm.querySelectorAll("[required]").forEach((field) => {
+        const hasValue = field.type === "checkbox" ? field.checked : Boolean(field.value.trim());
+        field.setAttribute("aria-invalid", String(!hasValue));
+        isValid = isValid && hasValue;
+      });
+      return isValid;
+    };
+
+    contactForm.oninput = validateForm;
+    contactForm.onsubmit = async (event) => {
+      event.preventDefault();
+      formStatus.className = "form-status";
+      if (!validateForm()) {
+        formStatus.classList.add("error");
+        formStatus.textContent = translate("required");
+        return;
+      }
+      if (siteConfig.contact.mode === "preview" || !siteConfig.contact.endpoint) {
+        formStatus.textContent = translate("previewStatus");
+        return;
+      }
+      const submitButton = contactForm.querySelector("button");
+      submitButton.disabled = true;
+      try {
+        const response = await fetch(siteConfig.contact.endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(Object.fromEntries(new FormData(contactForm))),
+        });
+        if (!response.ok) throw new Error("Request failed");
+        contactForm.reset();
+        formStatus.classList.add("success");
+        formStatus.textContent = translate("sentStatus");
+      } catch {
+        formStatus.classList.add("error");
+        formStatus.textContent = translate("sendError");
+      } finally {
+        submitButton.disabled = false;
+      }
+    };
+  }
+
+  setupLanguageSwitcher();
+  setupMobileMenu();
+  setupProfilePhoto();
+  setupContactForm();
+  document.querySelector("[data-year]").textContent = new Date().getFullYear();
+  setLanguage(currentLanguage);
 })();
