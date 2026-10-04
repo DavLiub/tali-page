@@ -22,6 +22,10 @@ describe("site behavior", () => {
     expect(document.documentElement.dir).toBe("rtl");
     expect(localStorage.getItem("tali-language")).toBe("he");
     expect(document.querySelector('[data-language="he"]').getAttribute("aria-pressed")).toBe("true");
+    expect(document.querySelector('[data-language="he"]').textContent).toBe("HE");
+    document.querySelectorAll("[data-site-name]").forEach((element) => expect(element.textContent).toBe("טלי"));
+    expect(document.querySelector('[data-i18n="letterOne"]').textContent).toBe("א");
+    expect(document.querySelector('[data-i18n="letterTwo"]').textContent).toBe("ל");
   });
 
   test("restores a saved language", () => {

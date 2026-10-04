@@ -42,7 +42,7 @@
     document.title = translate("pageTitle");
     document.querySelectorAll("[data-i18n]").forEach((element) => { element.textContent = translate(element.dataset.i18n); });
     document.querySelectorAll("[data-i18n-html]").forEach((element) => { element.innerHTML = translate(element.dataset.i18nHtml); });
-    document.querySelectorAll("[data-site-name]").forEach((element) => { element.textContent = siteConfig.siteName; });
+    document.querySelectorAll("[data-site-name]").forEach((element) => { element.textContent = translate("siteName"); });
     document.querySelectorAll("[data-language]").forEach((button) => { button.setAttribute("aria-pressed", String(button.dataset.language === currentLanguage)); });
     renderDynamicContent();
   }
@@ -74,7 +74,7 @@
   function setupProfilePhoto() {
     if (!siteConfig.profilePhoto) return;
     const photoContainer = document.querySelector("[data-photo]");
-    photoContainer.innerHTML = `<img src="${escapeHtml(siteConfig.profilePhoto)}" alt="${escapeHtml(siteConfig.siteName)}">`;
+    photoContainer.innerHTML = `<img src="${escapeHtml(siteConfig.profilePhoto)}" alt="${escapeHtml(translate("siteName"))}">`;
     photoContainer.classList.add("has-photo");
   }
 
