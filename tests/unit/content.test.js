@@ -35,4 +35,9 @@ describe("localized content", () => {
     const hebrewCopy = JSON.stringify(content.he);
     expect(hebrewCopy).not.toMatch(/קלינאי|קלינאית|טיפול\s+בדיבור/i);
   });
+
+  test("uses localized names and alphabet examples", () => {
+    expect(content.ru).toMatchObject({ siteName: "Тали", letterOne: "А", letterTwo: "Ш" });
+    expect(content.he).toMatchObject({ siteName: "טלי", letterOne: "א", letterTwo: "ל" });
+  });
 });
