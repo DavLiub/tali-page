@@ -1,0 +1,8 @@
+:root{
+  /* Меняйте палитру только здесь */
+  --primary:#3f5bc4;--primary-dark:#30489f;--secondary:#ff9f8f;--accent:#f6c85f;
+  --ink:#26324a;--muted:#667085;--surface:#fff;--soft:#f4f7ff;--warm:#fff8f2;
+  --border:#dfe5f2;--success:#2f8f6b;--error:#b42318;
+  --shadow:0 22px 55px rgba(56,86,200,.12);--card-shadow:0 12px 30px rgba(38,50,74,.08);
+  --radius:22px;--container:1180px
+}
